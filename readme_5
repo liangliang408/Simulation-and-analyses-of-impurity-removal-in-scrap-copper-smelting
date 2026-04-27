@@ -1,0 +1,589 @@
+
+plot_prediction_comparison(y_test, test_preds_lr, dataset_type='test')
+X_=pd.DataFrame(X,columns=columns)
+X_.head()
+
+import shap
+
+x_columns = columns
+
+explainer = shap.KernelExplainer(best_model.predict, X_train[:50, :]) 
+
+
+shap_values = explainer.shap_values(X_)
+
+shap_values_Explanation = explainer(X_)
+
+import matplotlib.pyplot as plt
+
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12  
+
+shap.summary_plot(shap_values, X,feature_names=x_columns,show=False)
+plt.savefig("gra.tif")  
+plt.show()
+
+shap.summary_plot(shap_values,X_, plot_type="bar",show=False)
+plt.savefig("impro.tif") 
+plt.show()
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from matplotlib import colors as mcolors
+from matplotlib.cm import ScalarMappable
+from scipy.stats import pearsonr
+
+def calculate_correlations(X, y):
+    """
+     Pearson 。
+
+    para:
+    X -- (n_samples, n_features)
+    y --  (n_samples,)
+
+    return:
+    correlations --  (n_features,)
+    """
+    correlations = []
+    for i in range(X.shape[1]):  
+        corr, _ = pearsonr(X[:, i], y)  
+        correlations.append(corr)
+    return np.array(correlations)
+
+def plot_shap_feature_importance(features, shap_values, X, y, top_n=10):
+    """
+    SHAP。
+
+   para:
+    features -- 
+    shap_values -- 
+    X --  (n_samples, n_features)
+    y --  (n_samples,)
+    top_n -- 
+    """
+   
+    avg_shap_values = np.mean(np.abs(shap_values), axis=0)
+    
+   
+    sorted_idx = np.argsort(avg_shap_values)[::-1]  
+    
+  
+    top_features = np.array(features)[sorted_idx[:top_n]][::-1]
+    top_shap_values = avg_shap_values[sorted_idx[:top_n]][::-1]
+    
+   
+    correlations = calculate_correlations(X, y)
+    top_correlations = correlations[sorted_idx[:top_n]][::-1]
+    
+   
+    total_shap_value = np.sum(top_shap_values)
+    
+    
+    percentage_values = (top_shap_values / total_shap_value) * 100
+    
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    
+    norm = mcolors.Normalize(vmin=-1, vmax=1)
+    cmap = plt.get_cmap('viridis')
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])  
+    
+
+    colors = [cmap(norm(cor)) for cor in top_correlations]
+    bars = ax.barh(top_features, top_shap_values, color=colors, edgecolor="none") 
+    
+  
+    for i, bar in enumerate(bars):
+     
+        text_color = 'white' if np.mean(colors[i][:3]) < 0.5 else 'black'
+ 
+        ax.text(bar.get_width() / 2, bar.get_y() + bar.get_height() / 2,
+                f'r = {top_correlations[i]:.3f}\n{percentage_values[i]:.2f}%',
+                ha='center', va='center', fontsize=10, color=text_color)
+    
+
+    ax.set_xlabel('The average value of absolute SHAP value', fontsize=12)
+    ax.set_ylabel('Features', fontsize=12)
+    ax.set_title('SHAP Feature Importance (Descending Order)', fontsize=14)
+    
+
+    for spine in ['top', 'right']:
+       ax.spines[spine].set_visible(False)
+    
+
+    x_max = np.max(top_shap_values) * 1.2
+    ax.set_xlim(0, x_max)
+    
+
+    cbar_ax = fig.add_axes([0.91, 0.1, 0.02, 0.8]) 
+    cbar = fig.colorbar(sm, cax=cbar_ax)
+    cbar.set_label('Positive/Negative correlation level')
+    
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+plot_shap_feature_importance(columns, shap_values, X, y, top_n=10)
+
+              shap.dependence_plot('X2', shap_values, X_, interaction_index='X10',show=False)
+plt.show()
+
+         
+sample_index = 1
+expected_value = explainer.expected_value
+
+sample_shap_values = shap_values[sample_index]
+
+
+shap.force_plot(expected_value, sample_shap_values, X_.iloc[sample_index], matplotlib=True,show=False)
+
+plt.show()
+
+              import matplotlib.pyplot as plt
+
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12  
+expected_value = explainer.expected_value
+
+shap_explanation = shap.Explanation(values=shap_values[0:500, :], 
+                                    base_values=  expected_value, 
+                                    data=X_.iloc[0:500, :], 
+                                    feature_names=X_.columns)
+
+plt.figure()
+shap.plots.heatmap(shap_explanation,show=False)
+plt.show()
+
+              plt.figure(figsize=(10, 5), dpi=1200)
+
+shap.plots.bar(shap_values_Explanation[0], show_data=True, show=False, max_display=13）
+plt.title('SHAP Explanation for Instance (Feature Importance with Data)')
+plt.show()
+
+              shap_values_Explanation[1]
+
+
+              plt.figure(figsize=(10, 5), dpi=1200)
+
+shap.plots.waterfall(shap_values_Explanation[1], show=False, max_display=13)
+plt.show()
+
+
+              import matplotlib.pyplot as plt
+
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12  
+
+expected_value = explainer.expected_value
+
+shap_values_ =shap_values
+
+features_display = X_.columns
+
+plt.figure(figsize=(10, 5), dpi=1200)  
+shap.decision_plot(expected_value, shap_values_, features_display, show=False)
+plt.show()
+
+
+              import matplotlib.pyplot as plt
+
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12 
+
+fig, ax1 = plt.subplots(figsize=(10, 8), dpi=1200
+shap.summary_plot(shap_values, X_, feature_names=X_.columns , plot_type="dot", show=False, color_bar=True)
+plt.gca().set_position([0.2, 0.2, 0.65, 0.65])  
+
+ax1 = plt.gca()
+ax2 = ax1.twiny()
+shap.summary_plot(shap_values, X_, feature_names=X_.columns , plot_type="bar", show=False, color_bar=True)
+plt.gca().set_position([0.2, 0.2, 0.65, 0.65]) 
+ax2.axhline(y=20, color='gray', linestyle='-', linewidth=1)  
+bars = ax2.patches  
+for bar in bars:    
+    bar.set_alpha(0.2)  
+ax1.set_xlabel('Shapley Value Contribution (Bee Swarm)', fontsize=12)
+ax2.set_xlabel('Mean Shapley Value (Feature Importance)', fontsize=12)
+ax2.xaxis.set_label_position('top') 
+ax2.xaxis.tick_top()  
+
+ax1.set_ylabel('Features', fontsize=12)
+plt.show()
+
+
+              import shap
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+feature_names = X_.columns
+
+mean_shap_values = np.abs(shap_values).mean(axis=0)
+sorted_idx = np.argsort(mean_shap_values)[::-1]
+mean_shap_values = mean_shap_values[sorted_idx]
+feature_names_sorted = [feature_names[i] for i in sorted_idx]
+
+
+custom_colors = [
+   "#FFD700",   
+    "#FFA07A",  
+    "#9370DB", 
+    "#98FB98",  
+    "#87CEEB",  
+    "#FFC0CB",  
+    "#4682B4",  
+    "#9ACD32",  
+    "#FF6347",  
+    "#DDA0DD",  
+    "#00BFFF",  
+    "#F0E68C", 
+    "#FF1493", 
+    "#7B68EE", 
+    "#00FA9A",  
+    "#FF4500",  
+    "#8A2BE2",  
+    "#DC143C",  
+    "#00CED1",  
+    "#FF8C00",  
+    "#9932CC",  
+    "#8B0000", 
+    "#2E8B57",  
+    "#6A5ACD",  
+    "#FF69B4",  
+    "#20B2AA",  
+    "#778899",  
+    "#B0C4DE",  
+    "#FFDEAD",  
+    "#8B4513"   
+]
+
+max_display = 7 
+
+feature_names_sorted
+
+
+                        import matplotlib.pyplot as plt
+
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12  
+custom_colors_sorted = [custom_colors[i] for i in sorted_idx]
+
+
+fig, axes = plt.subplots(1, 2, figsize=(40, 10), gridspec_kw={'width_ratios': [15, 15]},dpi=1200)
+
+
+plt.sca(axes[0])
+shap.summary_plot(
+    shap_values, X_, feature_names=feature_names, plot_type="dot", show=False, color_bar=True, plot_size=(8, 3),
+    color=plt.cm.RdBu,max_display=max_display
+)
+
+
+wedges, texts = axes[1].pie(
+    mean_shap_values[:max_display],
+    labels=[f"{v:.1f}%" for v in mean_shap_values[:max_display] / mean_shap_values.sum() * 100], 
+    colors=custom_colors_sorted[:max_display],
+    autopct=None,
+    startangle=90,
+    pctdistance=0.85,
+    wedgeprops=dict(width=0.3),
+    textprops={'fontsize': 5}  
+)
+
+
+axes[1].text(0, 0, "lightgbm", ha='center', va='center', fontsize=16, fontweight='bold')
+
+
+axes[1].legend(
+    loc="center left",
+    bbox_to_anchor=(1.2, 0.5),
+    labels=feature_names_sorted,
+    title="Features",
+    frameon=False,
+    prop={'size': 5}  
+)
+
+
+axes[0].set_title("SHAP Summary Plot", fontsize=14, pad=10)  
+axes[1].set_title("Feature Importance Donut Chart", fontsize=14, pad=17)  
+
+
+
+plt.subplots_adjust(wspace=5)  
+
+plt.tight_layout()
+plt.show()
+
+
+            import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+
+
+mean_shap_values = np.abs(shap_values).mean(axis=0)
+sorted_idx = np.argsort(-mean_shap_values)  
+mean_shap_values = mean_shap_values[sorted_idx]
+feature_names_sorted = [feature_names[i] for i in sorted_idx]
+
+colors= [
+    "#FFD700",   
+    "#FFA07A",  
+    "#9370DB", 
+    "#98FB98",  
+    "#87CEEB",  
+    "#FFC0CB",  
+    "#4682B4",  
+    "#9ACD32",  
+    "#FF6347",  
+    "#DDA0DD",  
+    "#00BFFF",  
+    "#F0E68C", 
+    "#FF1493", 
+    "#7B68EE", 
+    "#00FA9A",  
+    "#FF4500",  
+    "#8A2BE2",  
+    "#DC143C",  
+    "#00CED1",  
+    "#FF8C00",  
+    "#9932CC",  
+    "#8B0000", 
+    "#2E8B57",  
+    "#6A5ACD",  
+    "#FF69B4",  
+    "#20B2AA",  
+    "#778899",  
+    "#B0C4DE",  
+    "#FFDEAD",  
+    "#8B4513"  
+]
+
+
+# fig =  plt.figure(figsize=(40, 10), dpi=1200)
+# gs = plt.GridSpec(1, 2, width_ratios=[15, 15])
+
+fig, axes = plt.subplots(1, 2, figsize=(40, 10), gridspec_kw={'width_ratios': [15, 15]},dpi=1500)
+
+max_display=7
+
+feature_names_sorted=feature_names_sorted[:max_display]
+mean_shap_values=mean_shap_values[:max_display]
+
+# ax1 = fig.add_subplot(gs[0])
+ax1 = axes[0]
+y_pos = np.arange(len(feature_names_sorted))
+bars = ax1.barh(y_pos, mean_shap_values)
+
+
+for bar, color in zip(bars, colors):
+    bar.set_color(color)
+    bar.set_alpha(0.8) 
+
+ax1.set_yticks(y_pos)
+ax1.set_yticklabels(feature_names_sorted,fontsize=13)
+ax1.invert_yaxis() 
+ax1.set_xlabel('Value of importance',fontsize=13)
+ax1.set_title('Feature Importance',fontsize=13)
+
+
+ax_pie = fig.add_axes([0.18, 0.1, 0.3, 0.5], projection='3d')
+
+ax_pie.patch.set_alpha(0)  
+ax_pie.set_facecolor('none')  
+
+
+percentages = mean_shap_values / mean_shap_values.sum() * 100
+
+
+colors  = [
+     "#FFD700",   
+    "#FFA07A",  
+    "#9370DB", 
+    "#98FB98",  
+    "#87CEEB",  
+    "#FFC0CB",  
+    "#4682B4",  
+    "#9ACD32",  
+    "#FF6347",  
+    "#DDA0DD",  
+    "#00BFFF",  
+    "#F0E68C", 
+    "#FF1493", 
+    "#7B68EE", 
+    "#00FA9A",  
+    "#FF4500",  
+    "#8A2BE2",  
+    "#DC143C",  
+    "#00CED1",  
+    "#FF8C00",  
+    "#9932CC",  
+    "#8B0000", 
+    "#2E8B57",  
+    "#6A5ACD",  
+    "#FF69B4",  
+    "#20B2AA",  
+    "#778899",  
+    "#B0C4DE",  
+    "#FFDEAD",  
+    "#8B4513"  
+
+
+
+def draw_pie_3d(ax, ratios, colors, height=0.05): 
+    start_angle = 0
+    radius =1000
+    
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
+    
+
+    
+    for i, ratio in enumerate(ratios):
+
+        angle = ratio * 2 * np.pi / 100
+        end_angle = start_angle + angle
+        
+
+        r = np.linspace(0, radius, 1000)  
+        theta = np.linspace(start_angle, end_angle, 1000)  
+
+
+        mid_angle = (start_angle + end_angle) / 2
+        
+
+        r_grid, theta_grid = np.meshgrid(r, theta)
+
+        x = r_grid * np.cos(theta_grid)
+        y = r_grid * np.sin(theta_grid)
+
+        z = np.zeros_like(x)
+        ax.plot_surface(x, y, z, color=colors[i], alpha=0.8)
+        
+
+        z = np.ones_like(x) * height
+        ax.plot_surface(x, y, z, color=colors[i], alpha=0.8)
+
+        r_edge = np.array([radius])
+        theta_edge = np.linspace(start_angle, end_angle, 20)
+        x_edge = r_edge * np.cos(theta_edge)
+        y_edge = r_edge * np.sin(theta_edge)
+        z_edge = np.linspace(0, height, 20)
+        
+        x_edge_grid, z_edge_grid = np.meshgrid(x_edge, z_edge)
+        y_edge_grid, _ = np.meshgrid(y_edge, z_edge)
+        
+        ax.plot_surface(x_edge_grid, y_edge_grid, z_edge_grid, color=colors[i], alpha=0.8)
+        
+        start_angle = end_angle
+ 
+        label_radius = radius * 0.7
+        x_label = label_radius * np.cos(mid_angle)
+        y_label = label_radius * np.sin(mid_angle)
+       
+        ax.text(x_label, y_label, height, 
+                f'{ratio:.1f}%', 
+                horizontalalignment='center',
+                verticalalignment='center',
+                fontsize=7, 
+                fontweight='bold',
+                color='black',  
+                alpha=1.0,
+                zorder=100)  
+        
+
+
+
+
+draw_pie_3d(ax_pie, percentages, colors)
+
+
+ax_pie.view_init(elev=30, azim=45)
+ax_pie.set_box_aspect([1, 1, 0.15])
+ax_pie.set_axis_off()
+
+
+
+ax2 = axes[1]
+plt.sca(ax2)
+shap.summary_plot(shap_values, X_, feature_names=feature_names, 
+                 plot_type="dot", show=False,max_display=max_display)
+
+
+plt.tight_layout()
+plt.show()
+
+                        feature_index = 9  
+print("实际数据范围:", X_train[:, feature_index].min(), "to", X_train[:, feature_index].max())
+
+                        
+from sklearn.inspection import PartialDependenceDisplay
+
+
+features = [0,1,2,3,4,5]  
+PartialDependenceDisplay.from_estimator(
+    best_model, 
+    X_train, 
+    features, 
+    feature_names=columns, 
+    grid_resolution=20, 
+    n_jobs=-1  
+)
+
+
+plt.suptitle('Partial Dependence Plot for Adaboost ')
+plt.tight_layout()
+plt.show()
+
+                        features = [0,1,2,3] 
+fig, ax = plt.subplots(figsize=(15, 5))
+display = PartialDependenceDisplay.from_estimator(
+    best_model,
+    X_train,
+    features=features,
+    kind='both', 
+    grid_resolution=50,
+    contour_kw={'cmap': 'viridis', 'alpha': 0.8},
+    ax=ax
+)
+plt.show()
+
+
+                        from scipy.interpolate import splev, splrep
+from sklearn.inspection import PartialDependenceDisplay, partial_dependence
+import matplotlib.pyplot as plt
+
+
+PartialDependenceDisplay.from_estimator(
+    best_model, 
+    X_test, 
+    [0], 
+    feature_names=columns, 
+    grid_resolution=20, 
+    n_jobs=-1,  
+    line_kw={'linestyle': '--', 'color': 'gray'}  
+)
+features = [0]  
+pdp_result = partial_dependence(best_model, X_test, features, kind="both", grid_resolution=20)
+plot_x = pd.Series(pdp_result.grid_values[0]).rename('x')  
+plot_y = pd.Series(pdp_result.average[0]).rename('y')     
+plot_i = np.expand_dims(pdp_result.individual[0],axis=0)                     
+
+tck = splrep(plot_x, plot_y, s=30)
+xnew = np.linspace(plot_x.min(), plot_x.max(), 300)
+ynew = splev(xnew, tck, der=0) 
+
+plt.plot(xnew, ynew, linewidth=2)
+
+
+plt.show()
