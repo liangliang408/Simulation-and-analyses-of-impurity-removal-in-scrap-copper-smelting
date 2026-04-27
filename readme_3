@@ -1,0 +1,92 @@
+import numpy as np
+from sklearn.model_selection import KFold
+from sklearn.metrics import (
+    mean_squared_error,
+    mean_absolute_error,
+    r2_score,
+    explained_variance_score,
+    median_absolute_error,
+    max_error
+)
+
+
+def cv(best_model, X, y):
+    """
+    对回归模型进行交叉验证，并计算多个评价指标。
+
+    参数:
+    best_model: 训练好的回归模型
+    X: 特征数据 (numpy 数组或 DataFrame)
+    y: 目标值 (numpy 数组或 Series)
+
+    """
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    rmse_scores = []
+    r2_scores = []
+    mae_scores = []
+    explained_variance_scores = []
+    medae_scores = []
+    max_error_scores = []
+    mape_scores = []  # 新增：初始化 MAPE 分数列表
+
+    for train_index, test_index in kf.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        # 训练模型并预测
+        best_model.fit(X_train, y_train)
+        y_pred = best_model.predict(X_test)
+
+        # 计算各项指标
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        r2 = r2_score(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        explained_variance = explained_variance_score(y_test, y_pred)
+        medae = median_absolute_error(y_test, y_pred)
+        max_err = max_error(y_test, y_pred)
+        # 计算 MAPE
+        y_test = np.asarray(y_test)
+        y_test = np.where(y_test == 0, 1e-8, y_test)  # 避免除零错误
+        mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
+
+        # 将指标分数添加到列表中
+        rmse_scores.append(rmse)
+        r2_scores.append(r2)
+        mae_scores.append(mae)
+        explained_variance_scores.append(explained_variance)
+        medae_scores.append(medae)
+        max_error_scores.append(max_err)
+        mape_scores.append(mape)  # 新增：将 MAPE 分数添加到列表中
+
+    # 输出各项指标的平均值和标准差
+    print("R2分数平均值: ", np.mean(r2_scores))
+    print("R2分数标准差: ", np.std(r2_scores))
+    print("RMSE平均值: ", np.mean(rmse_scores))
+    print("RMSE标准差: ", np.std(rmse_scores))
+    print("MAE平均值: ", np.mean(mae_scores))
+    print("MAE标准差: ", np.std(mae_scores))
+    print("解释方差得分平均值: ", np.mean(explained_variance_scores))
+    print("解释方差得分标准差: ", np.std(explained_variance_scores))
+    print("中位数绝对误差平均值: ", np.mean(medae_scores))
+    print("中位数绝对误差标准差: ", np.std(medae_scores))
+    print("最大误差平均值: ", np.mean(max_error_scores))
+    print("最大误差标准差: ", np.std(max_error_scores))
+    print("MAPE平均值: ", np.mean(mape_scores))  # 新增：输出 MAPE 平均值
+    print("MAPE标准差: ", np.std(mape_scores))  # 新增：输出 MAPE 标准差
+
+
+print('训练集评价指标：\n')
+metrics_train = regression_metrics(y_train,best_model.predict(X_train))
+
+# 输出结果
+for metric_name, value in metrics_train.items():
+    print(f"{metric_name}: {value:.4f}")
+print('\n测试集评价指标：\n')   
+metrics_test = regression_metrics(y_test,best_model.predict(X_test))
+# 输出结果
+for metric_name, value in metrics_test.items():
+    print(f"{metric_name}: {value:.4f}")
+
+
+cv(best_model,X_train,y_train)
