@@ -1,0 +1,98 @@
+#  train_preds test_preds  LR
+train_preds_lr = best_model.predict(X_train)
+test_preds_lr = best_model.predict(X_test)
+#  numpy 
+y_train_np = np.array(y_train)
+y_test_np = np.array(y_test)
+
+train_metrics_lr = [r2_score(y_train_np, train_preds_lr), mean_squared_error(y_train_np, train_preds_lr, squared=False), mean_absolute_error(y_train_np, train_preds_lr)]
+test_metrics_lr = [r2_score(y_test_np, test_preds_lr), mean_squared_error(y_test_np, test_preds_lr, squared=False), mean_absolute_error(y_test_np, test_preds_lr)]
+
+train_metrics_text = f"R2: {train_metrics_lr[0]:.3f}\nRMSE: {train_metrics_lr[1]:.3f}\nMAE: {train_metrics_lr[2]:.3f}"
+
+test_metrics_text = f"R2: {test_metrics_lr[0]:.3f}\nRMSE: {test_metrics_lr[1]:.3f}\nMAE: {test_metrics_lr[2]:.3f}"
+
+R2_metrics_text=f"Train R2: {train_metrics_lr[0]:.3f}\nTest R2: {test_metrics_lr[0]:.3f}\n"
+RMSE_metrics_text=f"Train RMSE: {train_metrics_lr[1]:.3f}\nTest RMSE: {test_metrics_lr[1]:.3f}\n"
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=1200)
+
+ax.set_facecolor('white')
+
+ax.scatter(y_train_np, train_preds_lr, edgecolors='#90EE90', facecolors='none',label='Train')
+
+ax.scatter(y_test_np, test_preds_lr, edgecolors='#FFC0CB', facecolors='none',label='Test')
+
+train_coef = np.polyfit(y_train_np, train_preds_lr, 1)
+train_line = np.poly1d(train_coef)
+ax.plot(y_train_np, train_line(y_train_np), '#90EE90', linestyle='-')
+
+test_coef = np.polyfit(y_test_np, test_preds_lr, 1)
+test_line = np.poly1d(test_coef)
+ax.plot(y_test_np, test_line(y_test_np), '#FFC0CB', linestyle='-')
+
+x_min, x_max = min(y_train_np.min(), y_test_np.min()), max(y_train_np.max(), y_test_np.max())
+ax.plot([x_min, x_max], [x_min, x_max], 'k--')
+
+ax.set_xlabel('True Value', fontsize=14)
+ax.set_ylabel('Predicted Value', fontsize=14)
+ax.set_title('Adaboost', fontsize=18, fontweight='bold')
+
+ax.grid(False)
+ax.legend().set_visible(True)
+
+ax.text(0.05, 0.75, f"{R2_metrics_text}", transform=ax.transAxes, fontsize=15, fontweight='bold',        
+        verticalalignment='top', horizontalalignment='left', color='#90EE90')
+
+ax.text(0.95, 0.05, f"{RMSE_metrics_text}", transform=ax.transAxes, fontsize=15, fontweight='bold',        
+        verticalalignment='bottom', horizontalalignment='right', color='#FFC0CB')
+plt.savefig("1.pdf", format='pdf', bbox_inches='tight')
+plt.show()
+
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+def plot_prediction_comparison(y_true, y_pred, dataset_type='train', max_samples=500):
+     # 设置中文字体
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei（黑体）
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    plt.rcParams['font.family']=['SimHei']
+    plt.rcParams['font.serif'] = ['SimHei']
+    """
+    绘制训练集或测试集的预测结果对比图。
+
+    参数:
+    y_true: 真实值 (numpy 数组或列表)
+    y_pred: 预测值 (numpy 数组或列表)
+    dataset_type: 数据集类型 ('train' 或 'test')，用于标题和标签
+    max_samples: 最大样本数量，如果样本数量超过此值，只绘制前 max_samples 个样本
+    """
+
+    if len(y_true) > max_samples:
+        y_true = y_true[:max_samples]
+        y_pred = y_pred[:max_samples]
+        print(f"样本数量超过 {max_samples}，只绘制前 {max_samples} 个样本。")
+
+
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+
+
+    plt.figure(figsize=(8, 6))
+
+
+    plt.plot(range(1, len(y_true) + 1), y_true, 'r-*', label='真实值')
+    plt.plot(range(1, len(y_true) + 1), y_pred, 'b-o', label='预测值')
+    plt.xlabel('样本索引')
+    plt.ylabel('预测结果')
+    plt.title(f"{dataset_type.capitalize()}集预测结果对比\nRMSE={rmse:.4f}")
+    plt.xlim([1, len(y_true)])
+    plt.legend()
+    plt.grid()
+
+
+    plt.tight_layout()
+    # plt.savefig(path+'\ 4.png',dpi=300)
+    plt.show()
+
+plot_prediction_comparison(y_train, train_preds_lr, dataset_type='train')
