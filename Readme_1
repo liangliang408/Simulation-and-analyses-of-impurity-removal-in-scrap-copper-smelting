@@ -1,0 +1,62 @@
+import numpy as np
+import pandas as pd
+
+# data = pd.read_excel('data.xlsx')
+# best_model 
+# scaler 
+
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+
+results = []
+
+for i in range(len(X)):
+    current_features = X[i, :].reshape(1, -1)
+    
+    scaled_features = scaler.transform(current_features)
+    
+    predicted = best_model.predict(scaled_features)[0]
+    actual = y[i]
+
+    if actual != 0:  
+        relative_error = (predicted - actual) / actual * 100
+    else:
+        relative_error = np.nan
+    
+    first_feature = X[i, 0]     
+    eleventh_feature = X[i, 8]   
+    twelfth_feature = X[i, 9]    
+    
+    if X[i, 3] != 0:
+        feature_ratio = X[i, 2] / X[i, 3] 
+    else:
+        feature_ratio = np.nan
+    
+    results.append([
+        predicted, 
+        actual, 
+        relative_error, 
+        first_feature,
+        eleventh_feature,
+        twelfth_feature,
+        feature_ratio
+    ])
+
+results_df = pd.DataFrame(results, columns=[
+    'Pre', 
+    'Rea', 
+    'err(%)', 
+    '1', 
+    '11', 
+    '12',
+    '3/4'
+])
+
+# output
+print(results_df)
+
+results_df.to_excel('out.xlsx', index=False)
+
+results_matrix = np.array(results)
+print("\nmatrix：")
+print(results_matrix)
